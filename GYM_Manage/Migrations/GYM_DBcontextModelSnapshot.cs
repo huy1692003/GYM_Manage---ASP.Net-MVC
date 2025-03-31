@@ -22,6 +22,53 @@ namespace GYM_Manage.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("GYM_Manage.Models.BaiViet", b =>
+                {
+                    b.Property<int>("MaBaiViet")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("MaBaiViet"));
+
+                    b.Property<string>("HinhAnh")
+                        .IsRequired()
+                        .HasMaxLength(555)
+                        .HasColumnType("nvarchar(555)");
+
+                    b.Property<int>("IDNguoiTao")
+                        .HasColumnType("int");
+
+                    b.Property<string>("MoTaNgan")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<DateTime?>("NgayCapNhat")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("NgayDang")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("NoiDung")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("TieuDe")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("TrangThai")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("MaBaiViet");
+
+                    b.HasIndex("IDNguoiTao");
+
+                    b.ToTable("BaiViets");
+                });
+
             modelBuilder.Entity("GYM_Manage.Models.DangKyGoiTap", b =>
                 {
                     b.Property<int>("MaDangKy")
@@ -62,6 +109,10 @@ namespace GYM_Manage.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("MaGoiTap"));
+
+                    b.Property<string>("AnhDemo")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<decimal>("GiaTien")
                         .HasColumnType("decimal(18,2)");
@@ -127,11 +178,19 @@ namespace GYM_Manage.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("MaHuanLuyenVien"));
 
+                    b.Property<string>("AnhDaiDien")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("ChungChi")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("ChuyenMon")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("HoTen")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
@@ -345,6 +404,17 @@ namespace GYM_Manage.Migrations
                     b.HasKey("MaThietBi");
 
                     b.ToTable("ThietBis");
+                });
+
+            modelBuilder.Entity("GYM_Manage.Models.BaiViet", b =>
+                {
+                    b.HasOne("GYM_Manage.Models.NguoiDung", "NguoiTao")
+                        .WithMany()
+                        .HasForeignKey("IDNguoiTao")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("NguoiTao");
                 });
 
             modelBuilder.Entity("GYM_Manage.Models.DangKyGoiTap", b =>

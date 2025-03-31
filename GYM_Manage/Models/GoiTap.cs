@@ -9,12 +9,14 @@ namespace GYM_Manage.Models
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int MaGoiTap { get; set; }
 
+ 
         [Required]
         public string TenGoiTap { get; set; }
+        public string AnhDemo { get; set; }
         public string MoTa { get; set; }
 
         [Required]
-        public int ThoiHan { get; set; }
+        public int ThoiHan { get; set; }        
 
         [Required]
         public decimal GiaTien { get; set; }

@@ -13,7 +13,6 @@ namespace GYM_Manage.Models
         public int MaThanhVien { get; set; }
         public ThanhVien ThanhVien { get; set; }
 
-
         [ForeignKey("DangKyGoiTap")]
         public int MaDangKyGoiTap { get; set; }
         public DangKyGoiTap DangKyGoiTap { get; set; }

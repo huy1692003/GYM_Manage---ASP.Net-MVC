@@ -17,6 +17,7 @@ namespace GYM_Manage.Data
         public DbSet<LichTap> LichTaps { get; set; }
         public DbSet<ThanhToan> ThanhToans { get; set; }
         public DbSet<HoaDon> HoaDons { get; set; }
+        public DbSet<BaiViet> BaiViets { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -45,10 +46,11 @@ namespace GYM_Manage.Data
 
             // Cấu hình quan hệ giữa ThanhToan và ThanhVien để tránh lỗi multiple cascade paths
             modelBuilder.Entity<ThanhToan>()
-                .HasOne(t => t.ThanhVien)
-                .WithMany() // Không cần navigation property ở ThanhVien
-                .HasForeignKey(t => t.MaThanhVien)
-                .OnDelete(DeleteBehavior.NoAction);
+       .HasOne(t => t.ThanhVien)
+       .WithMany(tv => tv.ThanhToans) // 🔹 Định nghĩa quan hệ ngược lại
+       .HasForeignKey(t => t.MaThanhVien)
+       .OnDelete(DeleteBehavior.NoAction);
+
 
             // Cấu hình quan hệ giữa ThanhToan và DangKyGoiTap
             modelBuilder.Entity<ThanhToan>()
@@ -56,6 +58,12 @@ namespace GYM_Manage.Data
                 .WithMany()
                 .HasForeignKey(t => t.MaDangKyGoiTap)
                 .OnDelete(DeleteBehavior.NoAction);
+
+            modelBuilder.Entity<BaiViet>()
+                .HasOne(b => b.NguoiTao)
+                .WithMany()
+                .HasForeignKey(b => b.IDNguoiTao)
+                .OnDelete(DeleteBehavior.Restrict);  // 🔹 Hạn chế xóa nếu có liên kết
         }
     }
 }

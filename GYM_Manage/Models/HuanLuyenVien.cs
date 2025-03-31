@@ -11,8 +11,10 @@ namespace GYM_Manage.Models
 
         [ForeignKey("NguoiDung")]
         public int? MaNguoiDung { get; set; }
-        public NguoiDung NguoiDung { get; set; }
 
+        public string HoTen { get; set; }
+        public NguoiDung NguoiDung { get; set; }
+        public string AnhDaiDien { get; set; }
         public string ChuyenMon { get; set; }
         public string ChungChi { get; set; }
         public DateTime? NgayTuyenDung { get; set; }
