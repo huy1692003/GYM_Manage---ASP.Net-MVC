@@ -36,6 +36,7 @@
     <Folder Include="Migrations\" />
     <Folder Include="Views\Admin\QL_ThanhToan\" />
     <Folder Include="Views\BaiViet\" />
+    <Folder Include="Views\Contact\" />
     <Folder Include="wwwroot\images\banner\" />
     <Folder Include="wwwroot\images\homeImg\" />
   </ItemGroup>

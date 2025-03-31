@@ -14,7 +14,6 @@ namespace GYM_Manage.Data
         public DbSet<GoiTap> GoiTaps { get; set; }
         public DbSet<DangKyGoiTap> DangKyGoiTaps { get; set; }
         public DbSet<ThietBi> ThietBis { get; set; }
-        public DbSet<LichTap> LichTaps { get; set; }
         public DbSet<ThanhToan> ThanhToans { get; set; }
         public DbSet<HoaDon> HoaDons { get; set; }
         public DbSet<BaiViet> BaiViets { get; set; }

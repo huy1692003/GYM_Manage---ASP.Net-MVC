@@ -28,7 +28,7 @@
 				Chức Năng Quản Lý
 			</div>
 
-			<ul class="nav flex-column">
+			<ul class="nav flex-column" id="sidebarMenu">
 				@if (Context.Session.GetString("UserRole") == "Admin")
 				{
 					<li class="nav-item">
@@ -117,9 +117,10 @@
 					<i class="bi bi-list fs-4"></i>
 				</button>
 				
-				<div class="search-bar">
+				<div class="search-bar position-relative">
 					<i class="bi bi-search"></i>
-					<input type="text" class="form-control" placeholder="Tìm kiếm...">
+					<input type="text" class="form-control" id="menuSearch" placeholder="Tìm kiếm menu...">
+					<div id="searchResults" class="position-absolute w-100 bg-white shadow-sm rounded mt-1 d-none" style="z-index: 1000; max-height: 300px; overflow-y: auto;"></div>
 				</div>
 
 				<div class="ms-auto d-flex align-items-center">
@@ -258,6 +259,69 @@
 					link.classList.add('active');
 				} else if (link !== navLinks[0]) {
 					link.classList.remove('active');
+				}
+			});
+
+			// Menu search functionality
+			const menuSearch = document.getElementById('menuSearch');
+			const searchResults = document.getElementById('searchResults');
+			const menuItems = [];
+
+			// Collect all menu items
+			document.querySelectorAll('#sidebarMenu .nav-link').forEach(link => {
+				const text = link.querySelector('span').textContent.trim();
+				const icon = link.querySelector('i').className;
+				const url = link.getAttribute('href');
+				menuItems.push({ text, icon, url });
+			});
+
+			// Search function
+			menuSearch.addEventListener('input', function() {
+				const searchTerm = this.value.toLowerCase().trim();
+				
+				if (searchTerm === '') {
+					searchResults.innerHTML = '';
+					searchResults.classList.add('d-none');
+					return;
+				}
+
+				const filteredItems = menuItems.filter(item => 
+					item.text.toLowerCase().includes(searchTerm)
+				);
+
+				if (filteredItems.length > 0) {
+					searchResults.innerHTML = '';
+					filteredItems.forEach(item => {
+						const resultItem = document.createElement('div');
+						resultItem.className = 'p-2 border-bottom search-result-item';
+						resultItem.innerHTML = `<a href="${item.url}" class="text-decoration-none text-dark d-flex align-items-center">
+							<i class="${item.icon} me-2"></i>
+							<span>${item.text}</span>
+						</a>`;
+						resultItem.style.cursor = 'pointer';
+						resultItem.addEventListener('click', function() {
+							window.location.href = item.url;
+						});
+						searchResults.appendChild(resultItem);
+					});
+					searchResults.classList.remove('d-none');
+				} else {
+					searchResults.innerHTML = '<div class="p-2 text-muted">Không tìm thấy kết quả</div>';
+					searchResults.classList.remove('d-none');
+				}
+			});
+
+			// Hide search results when clicking outside
+			document.addEventListener('click', function(e) {
+				if (!menuSearch.contains(e.target) && !searchResults.contains(e.target)) {
+					searchResults.classList.add('d-none');
+				}
+			});
+
+			// Show results again when focusing on search input
+			menuSearch.addEventListener('focus', function() {
+				if (this.value.trim() !== '') {
+					searchResults.classList.remove('d-none');
 				}
 			});
 		});

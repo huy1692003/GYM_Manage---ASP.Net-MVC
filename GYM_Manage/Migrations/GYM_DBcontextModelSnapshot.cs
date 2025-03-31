@@ -207,43 +207,6 @@ namespace GYM_Manage.Migrations
                     b.ToTable("HuanLuyenViens");
                 });
 
-            modelBuilder.Entity("GYM_Manage.Models.LichTap", b =>
-                {
-                    b.Property<int>("MaLichTap")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("MaLichTap"));
-
-                    b.Property<int>("MaHuanLuyenVien")
-                        .HasColumnType("int");
-
-                    b.Property<int>("MaThanhVien")
-                        .HasColumnType("int");
-
-                    b.Property<string>("MoTa")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("ThoiGianBatDau")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime>("ThoiGianKetThuc")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("TrangThai")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("MaLichTap");
-
-                    b.HasIndex("MaHuanLuyenVien");
-
-                    b.HasIndex("MaThanhVien");
-
-                    b.ToTable("LichTaps");
-                });
-
             modelBuilder.Entity("GYM_Manage.Models.NguoiDung", b =>
                 {
                     b.Property<int>("MaNguoiDung")
@@ -319,9 +282,6 @@ namespace GYM_Manage.Migrations
                     b.Property<decimal>("SoTien")
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<int?>("ThanhVienMaThanhVien")
-                        .HasColumnType("int");
-
                     b.Property<string>("TrangThai")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -331,8 +291,6 @@ namespace GYM_Manage.Migrations
                     b.HasIndex("MaDangKyGoiTap");
 
                     b.HasIndex("MaThanhVien");
-
-                    b.HasIndex("ThanhVienMaThanhVien");
 
                     b.ToTable("ThanhToans");
                 });
@@ -464,25 +422,6 @@ namespace GYM_Manage.Migrations
                     b.Navigation("NguoiDung");
                 });
 
-            modelBuilder.Entity("GYM_Manage.Models.LichTap", b =>
-                {
-                    b.HasOne("GYM_Manage.Models.HuanLuyenVien", "HuanLuyenVien")
-                        .WithMany()
-                        .HasForeignKey("MaHuanLuyenVien")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("GYM_Manage.Models.ThanhVien", "ThanhVien")
-                        .WithMany()
-                        .HasForeignKey("MaThanhVien")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("HuanLuyenVien");
-
-                    b.Navigation("ThanhVien");
-                });
-
             modelBuilder.Entity("GYM_Manage.Models.ThanhToan", b =>
                 {
                     b.HasOne("GYM_Manage.Models.DangKyGoiTap", "DangKyGoiTap")
@@ -492,14 +431,10 @@ namespace GYM_Manage.Migrations
                         .IsRequired();
 
                     b.HasOne("GYM_Manage.Models.ThanhVien", "ThanhVien")
-                        .WithMany()
+                        .WithMany("ThanhToans")
                         .HasForeignKey("MaThanhVien")
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
-
-                    b.HasOne("GYM_Manage.Models.ThanhVien", null)
-                        .WithMany("ThanhToans")
-                        .HasForeignKey("ThanhVienMaThanhVien");
 
                     b.Navigation("DangKyGoiTap");
 

@@ -3,6 +3,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.EntityFrameworkCore;
 using GYM_Manage.Data;
+using Microsoft.AspNetCore.Http;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -32,6 +33,28 @@ app.UseSession();
 app.UseRouting();
 
 app.UseAuthorization();
+
+// Middleware kiểm tra đăng nhập cho khu vực Admin
+app.Use(async (context, next) =>
+{
+    var path = context.Request.Path.Value;
+    
+    // Kiểm tra nếu request đi vào khu vực Admin
+    if (path.StartsWith("/Admin") || path.StartsWith("/admin"))
+    {
+        // Kiểm tra session đăng nhập
+        var userRole = context.Session.GetString("UserRole");
+        
+        // Nếu chưa đăng nhập hoặc không phải Admin/Staff thì chuyển hướng về trang đăng nhập
+        if (string.IsNullOrEmpty(userRole) || (userRole != "Admin" && userRole != "Staff"))
+        {
+            context.Response.Redirect("/Auth/Login");
+            return;
+        }
+    }
+    
+    await next();
+});
 
 app.UseStatusCodePagesWithReExecute("/Error/{0}");
 

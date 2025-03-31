@@ -29,6 +29,7 @@
                     <thead class="bg-light">
                         <tr>
                             <th>Mã HLV</th>
+                            <th>Ảnh</th>
                             <th>Họ tên</th>
                             <th>Chuyên môn</th>
                             <th>Chứng chỉ</th>
@@ -41,15 +42,19 @@
                         {
                             <tr>
                                 <td>@item.MaHuanLuyenVien</td>
+                                <td>
+                                    <img src="@(string.IsNullOrEmpty(item.AnhDaiDien) ? "https://via.placeholder.com/50x50.png?text=HLV" : item.AnhDaiDien)" 
+                                         alt="@(item.NguoiDung?.HoTen ?? item.HoTen)" 
+                                         class="img-thumbnail" 
+                                         style="width: 50px; height: 50px; object-fit: cover;" />
+                                </td>
                                 <td>@(item.NguoiDung?.HoTen ?? item.HoTen)</td>
                                 <td>@item.ChuyenMon</td>
                                 <td>@item.ChungChi</td>
                                 <td>@item.NgayTuyenDung?.ToString("dd/MM/yyyy")</td>
                                 <td>
                                     <div class="btn-group">
-                                        <a asp-action="Details" asp-route-id="@item.MaHuanLuyenVien" class="btn btn-sm btn-info" title="Xem chi tiết">
-                                            <i class="bi bi-info-circle"></i>
-                                        </a>
+                                       
                                         <a asp-action="Edit" asp-route-id="@item.MaHuanLuyenVien" class="btn btn-sm btn-primary" title="Sửa">
                                             <i class="bi bi-pencil"></i>
                                         </a>

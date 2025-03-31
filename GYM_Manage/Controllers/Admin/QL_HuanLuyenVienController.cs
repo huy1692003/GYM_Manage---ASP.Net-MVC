@@ -4,8 +4,11 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 
 namespace GYM_Manage.Controllers.Admin
 {
@@ -13,37 +16,19 @@ namespace GYM_Manage.Controllers.Admin
     public class QL_HuanLuyenVienController : Controller
     {
         private readonly GYM_DBcontext _context;
+        private readonly IWebHostEnvironment _webHostEnvironment;
 
-        public QL_HuanLuyenVienController(GYM_DBcontext context)
+        public QL_HuanLuyenVienController(GYM_DBcontext context, IWebHostEnvironment webHostEnvironment)
         {
             _context = context;
+            _webHostEnvironment = webHostEnvironment;
         }
 
         // GET: Admin/HuanLuyenVien
         public async Task<IActionResult> Index()
         {
             // Check if there are any trainers in the database
-            if (!await _context.HuanLuyenViens.AnyAsync())
-            {
-                
-                // Create 10 sample trainers if none exist
-                var sampleHuanLuyenViens = new List<HuanLuyenVien>
-                {
-                    new HuanLuyenVien { HoTen = "Nguyễn Văn Anh", ChuyenMon = "Yoga", ChungChi = "Chứng chỉ Yoga quốc tế", NgayTuyenDung = DateTime.Now.AddYears(-2) },
-                    new HuanLuyenVien { HoTen = "Trần Thị Bình", ChuyenMon = "Thể hình", ChungChi = "ISSA Personal Trainer", NgayTuyenDung = DateTime.Now.AddYears(-1) },
-                    new HuanLuyenVien { HoTen = "Lê Văn Cường", ChuyenMon = "Cardio", ChungChi = "ACE Certified Personal Trainer", NgayTuyenDung = DateTime.Now.AddMonths(-8) },
-                    new HuanLuyenVien { HoTen = "Phạm Thị Dung", ChuyenMon = "Pilates", ChungChi = "Chứng chỉ Pilates quốc tế", NgayTuyenDung = DateTime.Now.AddMonths(-10) },
-                    new HuanLuyenVien { HoTen = "Hoàng Văn Em", ChuyenMon = "CrossFit", ChungChi = "CrossFit Level 2 Trainer", NgayTuyenDung = DateTime.Now.AddYears(-3) },
-                    new HuanLuyenVien { HoTen = "Ngô Thị Fun", ChuyenMon = "Boxing", ChungChi = "USA Boxing Coach", NgayTuyenDung = DateTime.Now.AddMonths(-6) },
-                    new HuanLuyenVien { HoTen = "Đỗ Văn Giang", ChuyenMon = "Dinh dưỡng thể thao", ChungChi = "NASM Fitness Nutrition Specialist", NgayTuyenDung = DateTime.Now.AddYears(-1).AddMonths(-3) },
-                    new HuanLuyenVien { HoTen = "Vũ Thị Hằng", ChuyenMon = "Phục hồi chấn thương", ChungChi = "NASM Corrective Exercise Specialist", NgayTuyenDung = DateTime.Now.AddMonths(-9) },
-                    new HuanLuyenVien { HoTen = "Đinh Văn Inh", ChuyenMon = "Thể dục nhịp điệu", ChungChi = "ACE Group Fitness Instructor", NgayTuyenDung = DateTime.Now.AddYears(-2).AddMonths(-5) },
-                    new HuanLuyenVien { HoTen = "Bùi Thị Khiêm", ChuyenMon = "Powerlifting", ChungChi = "IPF Coach Level 1", NgayTuyenDung = DateTime.Now.AddMonths(-4) }
-                };
-
-                await _context.HuanLuyenViens.AddRangeAsync(sampleHuanLuyenViens);
-                await _context.SaveChangesAsync();
-            }
+           
 
             var huanLuyenViens = await _context.HuanLuyenViens.Include(h => h.NguoiDung).ToListAsync();
             return View("~/Views/Admin/QL_HuanLuyenVien/Index.cshtml", huanLuyenViens);
@@ -96,17 +81,62 @@ namespace GYM_Manage.Controllers.Admin
         // POST: Admin/HuanLuyenVien/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("HoTen,MaNguoiDung,ChuyenMon,ChungChi,NgayTuyenDung")] HuanLuyenVien huanLuyenVien)
+        public async Task<IActionResult> Create([Bind("HoTen,ChuyenMon,ChungChi,NgayTuyenDung")] HuanLuyenVien huanLuyenVien, IFormFile anhDaiDien, string tenDangNhap, string email, string matKhau)
         {
+            ModelState.Remove("AnhDaiDien");
+            ModelState.Remove("NguoiDung");
+            ModelState.Remove("MaNguoiDung");
+            
             if (ModelState.IsValid)
             {
+                // Tạo mới người dùng
+                var nguoiDung = new NguoiDung
+                {
+                    TenDangNhap = tenDangNhap,
+                    Email = email,
+                    MatKhau = matKhau,
+                    HoTen = huanLuyenVien.HoTen,
+                    VaiTro = "Trainer", // Vai trò huấn luyện viên
+                    TrangThai = "HoatDong",
+                    NgayTao = DateTime.Now
+                };
+                
+                // Thêm người dùng vào database
+                _context.NguoiDungs.Add(nguoiDung);
+                await _context.SaveChangesAsync();
+                
+                // Gán mã người dùng vừa tạo cho huấn luyện viên
+                huanLuyenVien.MaNguoiDung = nguoiDung.MaNguoiDung;
+                
+                // Xử lý ảnh đại diện nếu có
+                if (anhDaiDien != null && anhDaiDien.Length > 0)
+                {
+                    string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "images", "huanluyenvien");
+                    
+                    // Đảm bảo thư mục tồn tại
+                    if (!Directory.Exists(uploadsFolder))
+                    {
+                        Directory.CreateDirectory(uploadsFolder);
+                    }
+
+                    string uniqueFileName = Guid.NewGuid().ToString() + "_" + anhDaiDien.FileName;
+                    string filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+                    using (var fileStream = new FileStream(filePath, FileMode.Create))
+                    {
+                        await anhDaiDien.CopyToAsync(fileStream);
+                    }
+
+                    huanLuyenVien.AnhDaiDien = "/images/huanluyenvien/" + uniqueFileName;
+                }
+
                 _context.Add(huanLuyenVien);
                 await _context.SaveChangesAsync();
                 TempData["SuccessMessage"] = "Thêm thành công!";
                 return RedirectToAction(nameof(Index));
             }
             TempData["ErrorMessage"] = "Thêm thất bại!";
-            return View("~/Views/Admin/QL_HuanLuyenVien/CreateOrEdit.cshtml");
+            return View("~/Views/Admin/QL_HuanLuyenVien/CreateOrEdit.cshtml", huanLuyenVien);
         }
 
         // GET: Admin/HuanLuyenVien/Edit/5
@@ -129,17 +159,61 @@ namespace GYM_Manage.Controllers.Admin
         // POST: Admin/HuanLuyenVien/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("HoTen,MaHuanLuyenVien,MaNguoiDung,ChuyenMon,ChungChi,NgayTuyenDung")] HuanLuyenVien huanLuyenVien)
+        public async Task<IActionResult> Edit(int id, [Bind("HoTen,MaHuanLuyenVien,MaNguoiDung,ChuyenMon,ChungChi,NgayTuyenDung,AnhDaiDien")] HuanLuyenVien huanLuyenVien, IFormFile anhDaiDien)
         {
             if (id != huanLuyenVien.MaHuanLuyenVien)
             {
                 return NotFound();
             }
+            ModelState.Remove("AnhDaiDien");
+            ModelState.Remove("NguoiDung");
 
             if (ModelState.IsValid)
             {
                 try
                 {
+                    // Lấy huấn luyện viên hiện tại từ database để lấy đường dẫn ảnh cũ
+                    var existingHLV = await _context.HuanLuyenViens.AsNoTracking().FirstOrDefaultAsync(h => h.MaHuanLuyenVien == id);
+                    if (existingHLV == null)
+                    {
+                        TempData["ErrorMessage"] = "Không tìm thấy huấn luyện viên!";
+                        return RedirectToAction(nameof(Index));
+                    }
+
+                    // Xử lý ảnh đại diện nếu có
+                    if (anhDaiDien != null && anhDaiDien.Length > 0)
+                    {
+                        // Xóa ảnh cũ nếu có
+                        if (!string.IsNullOrEmpty(existingHLV.AnhDaiDien))
+                        {
+                            string oldImagePath = Path.Combine(_webHostEnvironment.WebRootPath, existingHLV.AnhDaiDien.TrimStart('/'));
+                            if (System.IO.File.Exists(oldImagePath))
+                            {
+                                System.IO.File.Delete(oldImagePath);
+                            }
+                        }
+
+                        // Lưu ảnh mới
+                        string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "images", "huanluyenvien");
+                        string uniqueFileName = Guid.NewGuid().ToString() + "_" + anhDaiDien.FileName;
+                        string filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+                        // Đảm bảo thư mục tồn tại
+                        Directory.CreateDirectory(uploadsFolder);
+
+                        using (var fileStream = new FileStream(filePath, FileMode.Create))
+                        {
+                            await anhDaiDien.CopyToAsync(fileStream);
+                        }
+
+                        huanLuyenVien.AnhDaiDien = "/images/huanluyenvien/" + uniqueFileName;
+                    }
+                    else
+                    {
+                        // Nếu không upload ảnh mới, giữ nguyên ảnh cũ
+                        huanLuyenVien.AnhDaiDien = existingHLV.AnhDaiDien;
+                    }
+
                     _context.Update(huanLuyenVien);
                     await _context.SaveChangesAsync();
                     TempData["SuccessMessage"] = "Chỉnh sửa thành công!";
@@ -167,6 +241,16 @@ namespace GYM_Manage.Controllers.Admin
             var huanLuyenVien = await _context.HuanLuyenViens.FindAsync(id);
             if (huanLuyenVien != null)
             {
+                // Xóa ảnh đại diện nếu có
+                if (!string.IsNullOrEmpty(huanLuyenVien.AnhDaiDien))
+                {
+                    string imagePath = Path.Combine(_webHostEnvironment.WebRootPath, huanLuyenVien.AnhDaiDien.TrimStart('/'));
+                    if (System.IO.File.Exists(imagePath))
+                    {
+                        System.IO.File.Delete(imagePath);
+                    }
+                }
+
                 _context.HuanLuyenViens.Remove(huanLuyenVien);
                 await _context.SaveChangesAsync();
                 TempData["SuccessMessage"] = "Xóa thành công!";
